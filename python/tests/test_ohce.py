@@ -5,45 +5,30 @@ from ohce.greeter import Greeter, SystemClock
 from ohce.ui import UI, ConsoleInteractor
 
 
-def test_nightly_greeting():
-    """
-    Assert that greeter says "Good night" at midnight
-    (when current hour is 0)
-    """
-    greeter = Greeter()
-    mock_clock = Mock(spec=SystemClock)
-    mock_clock.current_hour.return_value = 0
-    greeter.clock = mock_clock
+@pytest.fixture()
+def mock_clock():
+    return Mock(spec=SystemClock)
 
+
+@pytest.fixture()
+def greeter(mock_clock):
+    greeter = Greeter()
+    greeter.clock = mock_clock
+    return greeter
+
+
+def test_nightly_greeting(mock_clock, greeter):
+    mock_clock.current_hour.return_value = 0
     assert greeter.greet() == "Good night"
 
 
-def test_greeting_never_returns_none():
-    """
-    Check that for each hour from 0 to 23, the greet()
-    method never return None
-    """
-    greeter = Greeter()
-    mock_clock = Mock(spec=SystemClock)
-    
+def test_greeting_never_returns_none(mock_clock, greeter):
     for hour in range(24):
         mock_clock.current_hour.return_value = hour
-        greeter.clock = mock_clock
         assert greeter.greet() is not None
 
 
 def test_ohce_main_loop():
-    """
-    Given the following inputs:
-    - hello
-    - oto
-    - quit
-
-    Check that the following messages are printed:
-    - olleh
-    - oto
-    - That was a palindrome!
-    """
     ui = UI()
     mock_interactor = Mock(spec=ConsoleInteractor)
     mock_interactor.read_input.side_effect = ["hello", "oto", "quit"]
